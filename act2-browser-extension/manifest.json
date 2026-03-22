@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "TOTP Red Hat",
+  "version": "1.0.0",
+  "description": "Two-Factor Authentication Manager — TOTP Red Hat",
+  "permissions": ["cookies", "storage", "alarms"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icon48.png"
+    }
+  },
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "cool-datetime-helper",
+  "version": "1.0.0",
+  "description": "A helpful datetime utility library",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node install.js"
+  }
+}

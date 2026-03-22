@@ -1,0 +1,12 @@
+{
+  "name": "my-awesome-app",
+  "version": "1.0.0",
+  "description": "A sample app that depends on cool-datetime-helper",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "cool-datetime-helper": "file:../cool-datetime-helper"
+  }
+}

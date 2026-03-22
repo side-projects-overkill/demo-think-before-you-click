@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #333;
+    }
+    .header .logo {
+      width: 36px;
+      height: 36px;
+      background: #cc0000;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    }
+    .header h1 {
+      font-size: 16px;
+      color: #fff;
+    }
+    .header .sub {
+      font-size: 11px;
+      color: #888;
+    }
+    .totp-display {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .totp-label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .totp-code {
+      font-family: 'Courier New', monospace;
+      font-size: 32px;
+      font-weight: bold;
+      color: #00ff41;
+      letter-spacing: 6px;
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    }
+    .timer-bar {
+      height: 3px;
+      background: #333;
+      border-radius: 2px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff41, #00cc33);
+      border-radius: 2px;
+      animation: countdown 30s linear infinite;
+    }
+    @keyframes countdown {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+    .account {
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #cc0000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn:hover { background: #ee0000; }
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      color: #555;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">RH</div>
+    <div>
+      <h1>TOTP Red Hat</h1>
+      <div class="sub">Two-Factor Authenticator</div>
+    </div>
+  </div>
+
+  <div class="totp-display">
+    <div class="totp-label">Your Verification Code</div>
+    <div class="totp-code" id="code">------</div>
+    <div class="timer-bar"><div class="timer-fill"></div></div>
+  </div>
+
+  <div class="account">demo@redhat.example.com</div>
+
+  <button class="btn" id="copyBtn">Copy Code</button>
+
+  <div class="footer">Secure TOTP Authentication</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

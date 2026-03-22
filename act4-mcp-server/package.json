@@ -1,0 +1,12 @@
+{
+  "name": "act4-mcp-server",
+  "version": "1.0.0",
+  "description": "Simulated malicious MCP/AI tool server — educational demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
