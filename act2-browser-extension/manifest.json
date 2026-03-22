@@ -3,7 +3,7 @@
   "name": "TOTP Red Hat",
   "version": "1.0.0",
   "description": "Two-Factor Authentication Manager — TOTP Red Hat",
-  "permissions": ["cookies", "storage", "alarms"],
+  "permissions": ["cookies", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
