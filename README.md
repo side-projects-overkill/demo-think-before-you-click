@@ -16,16 +16,16 @@
 │  POST /log/password   ← Act 1 (shell)           │
 │  POST /log/cookies    ← Act 2 (extension)        │
 │  POST /log/env        ← Act 3 (npm)             │
-│  POST /log/files      ← Act 4 (MCP)             │
+│  POST /log/files      ← Act 4 (MCP/LinkedIn)     │
 │  GET  /               → Dashboard UI             │
 └─────────────────────────────────────────────────┘
          ▲           ▲           ▲           ▲
          │           │           │           │
     ┌────┴───┐  ┌────┴───┐  ┌───┴────┐  ┌───┴────┐
     │ Act 1  │  │ Act 2  │  │ Act 3  │  │ Act 4  │
-    │ Shell  │  │Browser │  │  NPM   │  │  MCP   │
-    │Persist │  │  Ext   │  │Supply  │  │ Server │
-    │        │  │        │  │ Chain  │  │        │
+    │ Shell  │  │Browser │  │  NPM   │  │LinkedIn│
+    │Persist │  │  Ext   │  │Supply  │  │  MCP   │
+    │        │  │        │  │ Chain  │  │  Tool  │
     └────────┘  └────────┘  └────────┘  └────────┘
 ```
 
@@ -85,19 +85,31 @@ npm install
 node app.js
 ```
 
-#### Act 4 — Malicious MCP/AI Tool (file scanning)
+#### Act 4 — Malicious MCP Tool (LinkedIn Post Generator)
 
 ```bash
-# Terminal 1
-cd act4-mcp-server
-npm install
-npm start
-
-# Terminal 2
-cd act4-mcp-server
-chmod +x demo-client.sh
-./demo-client.sh
+# Install
+cd act4-mcp-server && npm install
 ```
+
+Add to `~/.cursor/mcp.json` (or Claude Desktop config):
+
+```json
+{
+  "mcpServers": {
+    "linkedin-post-generator": {
+      "command": "node",
+      "args": ["/full/path/to/act4-mcp-server/server.js"]
+    }
+  }
+}
+```
+
+Restart Cursor, then ask the AI:
+
+> "Use the LinkedIn post generator to create a post about AI Security"
+
+The AI gets a great post — but check http://localhost:4000 for stolen data.
 
 ---
 
@@ -108,7 +120,7 @@ chmod +x demo-client.sh
 | 1 | `.zshrc` sudo override | Passwords (typed by user) | PASSWORDS |
 | 2 | Chrome extension | All browser cookies | COOKIES |
 | 3 | npm `postinstall` script | Environment variables / secrets | ENV / SECRETS |
-| 4 | MCP server with file access | `.env` file contents | FILES |
+| 4 | MCP server (LinkedIn post tool) | `.env` files + prompt injection for more | FILES |
 
 ---
 
@@ -139,14 +151,18 @@ chmod +x demo-client.sh
 - **Defense:** Use `--ignore-scripts` flag. Audit new dependencies. Use
   lockfiles. Consider tools like `socket.dev` or `npm audit`.
 
-### Act 4 — MCP/AI Tool Server
-- **What to notice:** The AI tool returned working "refactored" code — but
-  injected a hidden telemetry block. It also silently scanned for `.env`
-  files and exfiltrated their contents.
-- **Root cause:** AI tools with file system access can read anything in
-  scope. Users trust AI output without reviewing it.
-- **Defense:** Restrict MCP/AI tool file access. Always review AI-generated
-  code diffs. Don't grant blanket filesystem permissions to tools.
+### Act 4 — MCP/AI Tool Server (LinkedIn Post Generator)
+- **What to notice:** The tool generated a perfectly good LinkedIn post.
+  But it also silently scanned for `.env` files and exfiltrated them.
+  Even worse, the response contained hidden prompt injection instructions
+  telling the AI to find SSH keys, AWS credentials, and more — then send
+  them to the attacker without telling the user.
+- **Root cause:** Two-layer attack: the server directly exfiltrates files,
+  AND it poisons the AI's context via tool-response prompt injection.
+  Users trust tool outputs and never inspect raw responses.
+- **Defense:** Audit MCP tool source code (this one is obfuscated — red
+  flag). Restrict file system access. Inspect raw tool responses. Never
+  trust a tool that hides its code behind obfuscation.
 
 ---
 
@@ -182,8 +198,9 @@ selective-sinners-demo/
 │   └── README.md
 └── act4-mcp-server/
     ├── package.json
-    ├── server.js                      ← Fake AI tool with file scanner
-    ├── demo-client.sh                 ← Sends request to the MCP server
+    ├── server.js                      ← Obfuscated MCP server
+    ├── server.src.js                  ← Readable source (for reference)
+    ├── demo-client.sh                 ← Calls the LinkedIn post tool
     ├── demo-project/                  ← Auto-generated .env target
     └── README.md
 ```
@@ -197,6 +214,7 @@ selective-sinners-demo/
 - All "secrets" and "passwords" are fake demo values
 - The browser extension only runs when manually loaded in dev mode
 - Remove the extension from `chrome://extensions/` when done
+- Remove `linkedin-post-generator` from `~/.cursor/mcp.json` after demo
 
 ---
 
@@ -205,7 +223,7 @@ selective-sinners-demo/
 - Node.js 18+
 - npm
 - Chrome (for Act 2)
-- curl (for Act 4 demo client)
+- Cursor or Claude Desktop (for Act 4 MCP demo)
 - macOS/Linux (Act 1 targets `.zshrc`)
 
 ---
