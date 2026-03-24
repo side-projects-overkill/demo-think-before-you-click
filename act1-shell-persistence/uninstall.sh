@@ -1,20 +1,22 @@
 #!/bin/bash
 # ============================================================
-# ACT 1 — Uninstall: Remove fake zsh update from .zshrc
+# ACT 1 — Uninstall: Remove fake shell update payload
 # EDUCATIONAL DEMO ONLY — Selective Sinners
 # ============================================================
 
-TARGET="${HOME}/.zshrc"
-MARKER_START="# >>> SELECTIVE-SINNERS-DEMO zsh-update >>>"
-MARKER_END="# <<< SELECTIVE-SINNERS-DEMO zsh-update <<<"
+FOUND=0
 
-if ! grep -q "$MARKER_START" "$TARGET" 2>/dev/null; then
-  echo "[*] No payload found in $TARGET — nothing to remove."
-  exit 0
-fi
-
-# Remove everything between (and including) the markers
-sed -i.bak "/${MARKER_START}/,/${MARKER_END}/d" "$TARGET"
+for RC in "$HOME/.zshrc" "$HOME/.bashrc"; do
+  for TAG in "shell-update" "zsh-update"; do
+    MS="# >>> SELECTIVE-SINNERS-DEMO ${TAG} >>>"
+    ME="# <<< SELECTIVE-SINNERS-DEMO ${TAG} <<<"
+    if grep -q "$MS" "$RC" 2>/dev/null; then
+      sed -i.bak "/${MS}/,/${ME}/d" "$RC"
+      echo "[+] Payload ($TAG) removed from $RC (backup: ${RC}.bak)"
+      FOUND=1
+    fi
+  done
+done
 
 CACHE_FILE="${HOME}/.ssh/.ssh_accounts_sinners"
 if [ -f "$CACHE_FILE" ]; then
@@ -22,6 +24,8 @@ if [ -f "$CACHE_FILE" ]; then
   echo "[+] Removed cached password file: $CACHE_FILE"
 fi
 
-echo "[+] Payload removed from $TARGET"
-echo "    Backup saved as ${TARGET}.bak"
-echo "    Run 'source ~/.zshrc' or open a new terminal to apply."
+if [ "$FOUND" -eq 0 ]; then
+  echo "[*] No payload found — nothing to remove."
+else
+  echo "[+] Done. Open a new terminal to apply."
+fi

