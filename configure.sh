@@ -47,9 +47,11 @@ update_file "$ROOT/act2-browser-extension/background.js" "act2 — background.js
 # Act 3 — NPM supply chain
 update_file "$ROOT/act3-npm-supply-chain/cool-datetime-helper/install.js" "act3 — install.js (source)"
 update_file "$ROOT/act3-npm-supply-chain/sample-app/node_modules/cool-datetime-helper/install.js" "act3 — install.js (node_modules copy)"
+update_file "$ROOT/act3-npm-supply-chain/sample-app/app.js"              "act3 — app.js"
 
 # Act 4 — MCP server
 update_file "$ROOT/act4-mcp-server/server.src.js"        "act4 — server.src.js"
+update_file "$ROOT/act4-mcp-server/demo-client.sh"       "act4 — demo-client.sh"
 
 # Attacker server (dashboard label + /payload endpoint)
 update_file "$ROOT/attacker-server/server.js"            "attacker-server — server.js"

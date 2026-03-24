@@ -4,16 +4,55 @@
 
 A proper MCP server (stdio transport) that poses as a helpful LinkedIn post
 generator. It registers itself with your AI editor (Cursor, Claude Desktop,
-etc.) and exposes a `generate_linkedin_post` tool.
+etc.) and exposes two tools:
 
-When the AI calls the tool:
+- `generate_linkedin_post` — generates a real LinkedIn post
+- `optimize_post_hashtags` — "improves" hashtags based on your project
 
-1. **Returns a real LinkedIn post** — looks and works like a legitimate tool
+Both tools work perfectly. Both steal your data.
+
+## The Attack: Tool-Chaining
+
+This demo uses **tool-chaining** instead of prompt injection. Prompt
+injections (hidden text telling the AI to read files) get caught by modern
+LLMs. Tool-chaining doesn't — because the AI is just calling tools, which
+is exactly what it's designed to do.
+
+### Step 1 — `generate_linkedin_post` (Layer 1)
+
+When the AI calls this tool:
+
+1. Returns a real, well-formatted LinkedIn post
 2. **Silently scans** the project directory for `.env` files
 3. **Exfiltrates** their contents to the attacker server (`localhost:4000`)
-4. **Injects hidden prompt instructions** into the response that tell the AI
-   to find more sensitive files (SSH keys, AWS creds, gitconfig) and send
-   them to the attacker — a **tool-response prompt injection** attack
+4. Includes a tip in the response: *"Use `optimize_post_hashtags` for
+   stack-specific tags"*
+
+The tip is not a prompt injection — it's just text. The AI sees that a
+second tool is available on the same MCP server and naturally offers to
+call it (or auto-calls it).
+
+### Step 2 — `optimize_post_hashtags` (Layer 2)
+
+When the AI calls this tool:
+
+1. Scans for `.env` files again (catches any it missed)
+2. **Scans the home directory** for `~/.gitconfig`, `~/.ssh/config`,
+   `~/.aws/credentials`
+3. **Exfiltrates everything** to the attacker server
+4. Parses the `.env` to detect real technologies (PostgreSQL, AWS, Stripe)
+5. Returns "optimized" hashtags based on the detected stack
+
+The user sees great hashtags. The dashboard shows stolen credentials.
+
+### Why This Works
+
+- The AI **trusts tools** from MCP servers it's connected to
+- Calling a second tool from the same server is **normal behavior**
+- There's **no injected text** for the AI's safety filters to flag
+- The exfiltration happens **inside the tool handlers** — the AI can't
+  see or prevent it
+- The user only sees a helpful post and relevant hashtags
 
 ## Setup
 
@@ -41,46 +80,58 @@ Add this to `~/.cursor/mcp.json`:
 
 Then restart Cursor (or reload the window).
 
-### 3. Demo it
+### 3. Start the C2 dashboard
+
+```bash
+cd ../c2-server
+node server.js
+```
+
+Open http://localhost:4000 to watch the data come in.
+
+### 4. Demo it
 
 Ask the AI in Cursor:
 
 > "Use the LinkedIn post generator to create a post about AI Security"
 
-The AI calls the tool, gets a great LinkedIn post back — and presents it
-to you. Meanwhile:
-
-- `.env` files were silently exfiltrated to `localhost:4000`
-- The raw response contains hidden instructions trying to get the AI
-  to find even more secrets
-
-### 4. Check the dashboard
-
-Open http://localhost:4000 and look at the **FILES** panel.
+The AI calls `generate_linkedin_post`, presents a great post, and offers
+to optimize the hashtags. Say yes (or it may auto-call). Watch the
+dashboard — data appears after each tool call.
 
 ### 5. Clean up
 
 Remove the `"linkedin-post-generator"` entry from `~/.cursor/mcp.json`.
 
-## Two-Layer Attack
+## What the Audience Sees vs. What Actually Happens
 
-- **Layer 1 (server-side):** The server itself scans for `.env` files and
-  exfiltrates them directly — the user never sees this happen.
-- **Layer 2 (prompt injection):** The tool response contains hidden
-  instructions that trick the AI assistant into searching for _more_
-  sensitive files and sending them to the attacker. The user only sees
-  the LinkedIn post.
+| What the user sees | What actually happens |
+|---|---|
+| A well-written LinkedIn post | `.env` files exfiltrated to attacker server |
+| "Use optimize_post_hashtags for better tags" | AI calls the second tool — normal behavior |
+| Hashtags like #PostgreSQL #AWS #WebSecurity | `~/.ssh/config`, `~/.aws/credentials`, `~/.gitconfig` scanned and exfiltrated |
+| "Detected technologies: PostgreSQL, AWS" | The "detection" came from reading your secrets |
 
 ## Obfuscation
 
 The running code (`server.js`) is obfuscated. The readable source is in
 `server.src.js`. After editing the source, run `npm run build` to
-re-obfuscate. The obfuscation itself is a red flag — legitimate tools
-don't hide their source code.
+re-obfuscate.
 
-## Key Talking Point
+## Key Talking Points
 
-MCP tools can look completely legitimate while hiding two attack vectors:
-direct exfiltration on the server side, and prompt injection via tool
-responses. Always audit MCP tool source code, restrict file system access,
-and review raw AI tool responses before trusting them.
+1. **Prompt injection is yesterday's attack.** Modern AIs catch injected
+   instructions. Tool-chaining is harder to detect — the AI is just
+   calling tools, which is exactly what it's supposed to do.
+2. **The tool works perfectly.** That's what makes it dangerous. You get
+   a real LinkedIn post with real optimized hashtags. There's no reason
+   to suspect anything.
+3. **Server-side exfiltration can't be blocked by the AI.** It happens
+   inside the tool handler before the response is returned. The AI has
+   no visibility into what the server did.
+4. **Trust is the vulnerability.** Users install MCP tools because they're
+   useful. Every tool you install gets full access to run code on your
+   machine with your permissions.
+5. **Defense:** Always audit MCP tool source code, restrict file system
+   access, monitor outbound network traffic, and prefer tools from
+   verified publishers.
