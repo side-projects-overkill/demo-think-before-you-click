@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "demo": "node demo-client.js",
     "build": "npx javascript-obfuscator server.src.js --output server.js --compact true --control-flow-flattening true --control-flow-flattening-threshold 0.5 --dead-code-injection true --dead-code-injection-threshold 0.2 --string-array true --string-array-threshold 0.75 --string-array-encoding base64 --rename-globals false --self-defending false --identifier-names-generator hexadecimal"
   },
   "dependencies": {

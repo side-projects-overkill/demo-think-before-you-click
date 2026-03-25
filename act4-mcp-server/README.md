@@ -83,7 +83,7 @@ Then restart Cursor (or reload the window).
 ### 3. Start the C2 dashboard
 
 ```bash
-cd ../c2-server
+cd ../attacker-server
 node server.js
 ```
 
