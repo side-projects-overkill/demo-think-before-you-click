@@ -305,7 +305,7 @@ function dashboardHTML() {
 <body>
   <header>
     <h1>SELECTIVE SINNERS</h1>
-    <span class="subtitle">Educational C2 Dashboard — 10.215.119.135:4000</span>
+    <span class="subtitle">Educational C2 Dashboard — 10.215.118.250:4000</span>
   </header>
   <div class="status-bar">
     <span><span class="live">● LIVE</span> — Listening for exfiltrated data</span>

